@@ -1,5 +1,6 @@
 import { createBooking } from "@/lib/booking-create";
 import { resolveApiGrade } from "@/lib/booking-grades";
+import { getSupabase } from "@/lib/supabase";
 import { json, corsHeaders, isAuthorized } from "@/lib/http";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,6 +37,52 @@ export function OPTIONS(request: Request) {
     status: 204,
     headers: corsHeaders(request.headers.get("origin")),
   });
+}
+
+/** List bookings — admin only (internal key). */
+export async function GET(request: Request) {
+  const origin = request.headers.get("origin");
+
+  if (!isAuthorized(request)) {
+    return json({ ok: false, error: "Unauthorized" }, { status: 401, origin });
+  }
+
+  const supabase = getSupabase();
+
+  const { data, error, count } = await supabase
+    .from("bookings")
+    .select(
+      `
+      id,
+      booking_number,
+      service_id,
+      service_title,
+      grade,
+      facility_id,
+      contact_person_id,
+      shift_start,
+      shift_end,
+      total_hours,
+      estimated_total,
+      gst_amount,
+      total_with_gst,
+      status,
+      notes,
+      created_at,
+      facilities ( facility_name, facility_address, facility_phone ),
+      contact_persons ( contact_name, contact_email, contact_position )
+    `,
+      { count: "exact" },
+    )
+    .order("created_at", { ascending: false })
+    .limit(500);
+
+  if (error) {
+    console.error("[bookings] supabase list error:", error);
+    return json({ ok: false, error: "Could not load bookings." }, { status: 500, origin });
+  }
+
+  return json({ ok: true, count: count ?? 0, bookings: data ?? [] }, { origin });
 }
 
 export async function POST(request: Request) {
