@@ -64,3 +64,34 @@ export type Booking = {
   status: string;
   created_at: string;
 };
+
+export type ContactMessage = {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  company: string | null;
+  message: string;
+  status: string;
+  ip_address: string | null;
+  user_agent: string | null;
+  created_at: string;
+};
+
+export type Career = {
+  id: string;
+  title: string;
+  location: string;
+  department: string;
+  job_type: string;
+  salary: string | null;
+  about_role: string;
+  responsibilities: string[];
+  requirements: string[];
+  benefits: string[];
+  apply_url: string;
+  status: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
